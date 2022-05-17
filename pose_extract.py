@@ -112,7 +112,7 @@ def get_trans_from_gnssimu(path):
     trans = []
     tb_data = pd.read_table(path, sep=",", header=None).values
     timestamps = tb_data[3:,1].astype(np.float)
-    #tb_data[9827,7] = tb_data[9826,7]
+    tb_data[9827,7] = tb_data[9826,7]
     pose_data = np.concatenate((tb_data[:,5:8],tb_data[:,9:12]),axis=1)[3:].astype(np.float32)
     ## [Longitude Latitude Altitude Orientation Pitch Roll]
     ## convert GNSS data to ECEF coordinates

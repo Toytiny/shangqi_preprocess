@@ -21,6 +21,7 @@ Put all needed data under the root path.
 | ------------- | ----- | ----- | ----- | ------- | --------- | -------- |
 | LiDAR         | 0     | 0     | -0.3  | -2.5    | 0         | 0        |
 | Radar (front) | 0.06  | -0.2  | 0.7   | -3.5    | 2         | 180      |
+| Camera        | -1.793| -0.036| 1.520 | -1.66   | -0.09     | -0.9     |
 
 These parameters are adjusted by us and can roughly align LiDAR, radar point cloud and GT bounding boxes.
 
@@ -36,3 +37,7 @@ These parameters are adjusted by us and can roughly align LiDAR, radar point clo
 
 Please run the files w.r.t the order above. You can use /sync_radar, /sync_gt, and the original /lidar/../ folder for your task
 
+#### 4. Camera Instrinsic
+| Sensor        | fx        | fy       | cx       | cy        | 
+| ------------- | --------- | -------- | -------- | --------- |
+| Camera        | 1146.501  | 1146.589 | 971.982  | 647.093   | 

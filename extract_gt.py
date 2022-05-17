@@ -20,7 +20,7 @@ def get_info_idx(info_name, title):
 
 
 def extract_gt_box(root_path,save_path):
-    gt_file = osp(root_path, "GT.csv")
+    gt_file = osp(root_path, "input/gt_object/GT.csv")
     gt_data = np.loadtxt(gt_file, dtype=str, delimiter=',')
     title = gt_data[0]
     
@@ -64,20 +64,25 @@ def extract_gt_box(root_path,save_path):
         full_fname = osp(gt_export_dir, gt_fname)
         np.savetxt(full_fname, gt_obj_arr, fmt="%s")
         
+
 def main():    
     
-    root_path = ["../20220118-13-43-20/",
-                  "../20220126-14-52-23/",
-                  "../20220126-15-02-25/",
-                  "../20220126-15-12-26/",
-                  "../20220126-15-22-27/",
-                  "../20220126-15-32-28/",
-                  "../20220126-15-42-29/",
-                  
+    inhouse_path = "/mnt/12T/public/inhouse/"
+    save_path = "/mnt/12T/fangqiang/inhouse/"
+
+    root_path = ["/20220118-13-43-20/",
+                  "/20220126-14-52-23/",
+                  "/20220126-15-02-25/",
+                  "/20220126-15-12-26/",
+                  "/20220126-15-22-27/",
+                  "/20220126-15-32-28/",
+                  "/20220126-15-42-29/",
                  ]
-    save_path = root_path
+
     for i in range(len(root_path)):
-        extract_gt_box(root_path[i],save_path[i])
+        extract_gt_box(inhouse_path + root_path[i],save_path + root_path[i])
         
+
+
 if __name__ == '__main__':
     main()

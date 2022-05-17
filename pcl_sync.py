@@ -1,6 +1,7 @@
 # sync and concat multi-radar data to lidar scans with pose compensation
 import csv
 import open3d
+import cv2
 import numpy as np
 from math import sin, cos, pi
 import os
@@ -42,6 +43,22 @@ def get_cor_gt_idx(lidar_ts, gt_ts):
         idx = diff.argmin()
         cor_idx.append(idx)
         cor_ts.append(gt_ts[idx])
+    
+    cor_idx = np.array(cor_idx)
+    cor_ts = np.array(cor_ts)
+    
+    return cor_idx, cor_ts
+
+def get_cor_img_idx(lidar_ts, img_ts):
+    
+    cor_idx = []
+    cor_ts = []
+    
+    for target in lidar_ts:
+        diff = abs(img_ts - target)
+        idx = diff.argmin()
+        cor_idx.append(idx)
+        cor_ts.append(img_ts[idx])
     
     cor_idx = np.array(cor_idx)
     cor_ts = np.array(cor_ts)
@@ -98,18 +115,28 @@ def save_sync_gt(save_gt,gt_cor_idx,base_ts,lidar_ts,gt_files):
         full_fname = osp(save_gt, gt_fname)
         np.savetxt(full_fname, gt_obj, fmt="%s")    
         
+def save_sync_img(save_img,img_cor_idx,base_ts,lidar_ts,img_files):
+    
+    data_len = len(lidar_ts)
+    for i in tqdm(range(data_len)):
+        ts = lidar_ts[i]
+        img_ts = int(ts*1e3+base_ts)
+        img_obj = cv2.imread(img_files[img_cor_idx[i]][:-4]+'_B.png')
+        img_fname = str(img_ts).zfill(13) + ".png"
+        full_fname = osp(save_img, img_fname)
+        cv2.imwrite(full_fname, img_obj)  
+    
 
-    
-    
-    
-def sync_all_sensors(save_path, save_gt, radar, lidar_path, pose_path,\
-                     gt_path, base_ts, base_ts_local):
+def sync_all_sensors(save_radar, save_gt, save_img, radar, lidar_path, pose_path,\
+                     gt_path, image_path, base_ts, base_ts_local):
     
 
-    if not os.path.exists(save_path):
-        os.mkdir(save_path)
+    if not os.path.exists(save_radar):
+        os.mkdir(save_radar)
     if not os.path.exists(save_gt):
         os.mkdir(save_gt)
+    if not os.path.exists(save_img):
+        os.mkdir(save_img)
    
 
     radar_path = {'front': radar, 
@@ -120,12 +147,18 @@ def sync_all_sensors(save_path, save_gt, radar, lidar_path, pose_path,\
     front_files = sorted(glob(radar_path["front"]+'*.csv'))
     left_files = sorted(glob(radar_path["left"]+'*.csv'))
     right_files = sorted(glob(radar_path["right"]+'*.csv'))
-    lidar_files = sorted(glob(lidar_path+'*')) 
+    lidar_files = sorted(glob(lidar_path + os.listdir(lidar_path)[0] + '/*.pcd')) 
     gt_files = sorted(glob(gt_path+'*.csv'))
-    
+    img_files = glob(image_path+'*.png')
+    img_files_tmp = []
+    for file in img_files:
+        img_files_tmp.append(file.split('_')[0]+'.png')
+    img_files = sorted(img_files_tmp)
+
     radar_ts = {'front_ts': [], "left_ts" : [], "right_ts": []}
     lidar_ts = []
     gt_ts = []
+    img_ts = []
     gt_bias = 18000 + 100 + 25
     
     
@@ -139,9 +172,11 @@ def sync_all_sensors(save_path, save_gt, radar, lidar_path, pose_path,\
         lidar_ts.append((float(file.split('/')[-1].split('.')[0])-base_ts)/1e3)
     for file in gt_files:
         gt_ts.append((float(file.split('/')[-1].split('.')[0])-base_ts-gt_bias)/1e3)
-    
+    for file in img_files:
+        img_ts.append((float(file.split('/')[-1].split('.')[0])-base_ts)/1e3)
     gt_ts = np.array(gt_ts)
-        
+    img_ts = np.array(img_ts)
+
     for key in radar_ts:
         radar_ts[key] = np.array(radar_ts[key])
     
@@ -159,32 +194,38 @@ def sync_all_sensors(save_path, save_gt, radar, lidar_path, pose_path,\
     sensor_T = {"radar_front": radar_front_T, "radar_left": radar_left_T,
                 "radar_right": radar_right_T, "lidar": lidar_T}
     
-    
-    
     # # get the high-frenquency vehicle pose data (100Hz)
-    # ego_pose, pose_ts = get_interpolate_pose(pose_path,scale=10)
-    # pose_ts = (pose_ts-base_ts_local)/1e3
+    ego_pose, pose_ts = get_interpolate_pose(pose_path,scale=10)
+    pose_ts = (pose_ts-base_ts_local)/1e3
     # # get the corresponding timestamp (sync with lidar) of gt
     gt_cor_idx, gt_cor_ts = get_cor_gt_idx(lidar_ts, gt_ts)
     # # get the corresponding timestamp (sync with lidar) of each radar sensor 
-    # cor_idx, cor_ts = get_cor_radar_idx(lidar_ts, radar_ts)
+    cor_idx, cor_ts = get_cor_radar_idx(lidar_ts, radar_ts)
+    # # get the corresponding timestamp (sync with lidar) of each img
+    img_cor_idx, img_cor_ts = get_cor_img_idx(lidar_ts, img_ts)
     
     # # concat multi-radar data with temporal compensation using pose data
-    # concat_radars(base_ts, front_files,left_files,right_files,cor_idx,cor_ts, lidar_ts, ego_pose,pose_ts,sensor_T,save_path)
+    concat_radars(base_ts, front_files,left_files,right_files,cor_idx,cor_ts,\
+         lidar_ts, ego_pose,pose_ts,sensor_T,save_radar)
     # # save sync gt to new folder, no need pose data, just to match gt and lidar
     save_sync_gt(save_gt,gt_cor_idx,base_ts,lidar_ts,gt_files)
+    save_sync_img(save_img,img_cor_idx,base_ts,lidar_ts,img_files)
     
 
 def main():
     
-    root_path_ls = ["../20220118-13-43-20/",
-                  "../20220126-14-52-23/",
-                  "../20220126-15-02-25/",
-                  "../20220126-15-12-26/",
-                  "../20220126-15-22-27/",
-                  "../20220126-15-32-28/",
-                  "../20220126-15-42-29/",
+    inhouse_path = "/mnt/12T/public/inhouse/"
+    save_path = "/mnt/12T/fangqiang/inhouse/"
+
+    root_path_ls = ["/20220118-13-43-20/",
+                  "/20220126-14-52-23/",
+                  "/20220126-15-02-25/",
+                  "/20220126-15-12-26/",
+                  "/20220126-15-22-27/",
+                  "/20220126-15-32-28/",
+                  "/20220126-15-42-29/",
                  ]
+    # utc local
     base_ts_ls = {'20220118-13-43-20': [1642484600284,1642484600826],
                   '20220126-14-52-23': [1643179942119,1643179944003],
                   '20220126-15-02-25': [1643180543397,1643180545286],
@@ -194,20 +235,25 @@ def main():
                   '20220126-15-42-29': [1643182947438,1643182949343]
                   }
     
-    for i in range(len(root_path_ls)):
-        root = root_path_ls[i]
-        save_path = root + 'sync_radar/'
-        save_gt = root + 'sync_gt/'
-        radar_path = root + 'radar_front/'
-        # just to modify the sync_gt files 
-        # use the real lidar path at the first ime
-        lidar_path = root + 'sync_gt/'
-        pose_path = root + 'gnssimu-sample-v6@2.csv'
-        gt_path = root + 'gt_abs/'
-        base_ts = base_ts_ls[root[3:-1]][0]
-        base_ts_local = base_ts_ls[root[3:-1]][1]
-        sync_all_sensors(save_path, save_gt, radar_path, lidar_path, pose_path,\
-                              gt_path, base_ts, base_ts_local)
+    for i in range(1,len(root_path_ls)):
+
+        root = inhouse_path + root_path_ls[i]
+        save_root = save_path + root_path_ls[i] 
+
+        save_radar = save_root + 'sync_radar/'
+        save_gt = save_root + 'sync_gt/'
+        save_img = save_root + 'sync_img/'
+        radar_path = save_root + 'radar_front/'
+        # for scene flow works, no need to read lidar
+        lidar_path = root + 'input/lidar/'
+        pose_path = root + 'output/online/sample/gnssimu-sample-v6@2.csv'
+        image_path = root +'input/image/B/'
+        gt_path = save_root + 'gt_abs/'
+        base_ts = base_ts_ls[root_path_ls[i][1:-1]][0]
+        base_ts_local = base_ts_ls[root_path_ls[i][1:-1]][1]
+
+        sync_all_sensors(save_radar, save_gt, save_img, radar_path, lidar_path, pose_path,\
+                              gt_path, image_path, base_ts, base_ts_local)
     
 if __name__ == '__main__':
     main()

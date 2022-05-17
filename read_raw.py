@@ -219,34 +219,75 @@ class Lrr30:
                 points = np.array(points)
                 self.spm_point_cloud[frame['recvTime']] = points
 
+def read_raw_radar(root,save_root,base_ts):
 
-save_dir = "../20220126-15-42-29/radar_front/"
-if not os.path.exists(save_dir):
-    os.mkdir(save_dir)
-lrr = Lrr30('/media/toytiny/Data2/20220126-15-42-29/raw/raw.csv', target_sensor="front")
-## local base timestamp (meta.xml)
-base_ts = 1643182949343
-num_pcs = 0
-num_pnts = 0
-num_void = 0
-for k in lrr.spm_point_cloud:
+    if not os.path.exists(save_root):
+        os.makedirs(save_root)
+    lrr = Lrr30(root + '/input/raw/raw.csv', target_sensor="front")
 
-    current_ts = int(k * 1e3) + base_ts
-    v = lrr.spm_point_cloud[k]
+    num_pcs = 0
+    num_pnts = 0
+    num_void = 0
 
-    if np.size(v,0)>0:
-        num_pnts += len(v[:,0])
-        num_pcs +=1
-        dis = np.sqrt(v[:,0]**2+v[:,1]**2+v[:,2]**2)
-        #if dis.max()<1000:
-        save_path = os.path.join(save_dir, str(current_ts).zfill(13) + ".csv")
-        data = pd.DataFrame(v)
-        data.to_csv(save_path)
-        print("saving radar frame: ", str(k))
-    else:
-        num_void+=1
-        # else: 
-        #     raise("Not Single Distance Mode")
-avg_pnts = num_pnts/num_pcs
-print(num_void)
-print('Average points per scan is {}'.format(avg_pnts))
+    for k in lrr.spm_point_cloud:
+
+        current_ts = int(k * 1e3) + base_ts
+        v = lrr.spm_point_cloud[k]
+
+        if np.size(v,0)>0:
+            num_pnts += len(v[:,0])
+            num_pcs +=1
+            #dis = np.sqrt(v[:,0]**2+v[:,1]**2+v[:,2]**2)
+            #if dis.max()<1000:
+            data_path = os.path.join(save_root, str(current_ts).zfill(13) + ".csv")
+            data = pd.DataFrame(v)
+            data.to_csv(data_path)
+            print("saving radar frame: ", str(k))
+        else:
+            num_void+=1
+            # else: 
+            #     raise("Not Single Distance Mode")
+
+    avg_pnts = num_pnts/num_pcs
+    print('The number of void frames is {}'.format(num_void))
+    print('Average points per scan is {}'.format(avg_pnts))
+    
+
+def main():
+
+    inhouse_path = "/mnt/12T/public/inhouse/"
+    save_path = "/mnt/12T/fangqiang/inhouse/"
+
+
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    root_path_ls = ["/20220118-13-43-20/",
+                  "/20220126-14-52-23/",
+                  "/20220126-15-02-25/",
+                  "/20220126-15-12-26/",
+                  "/20220126-15-22-27/",
+                  "/20220126-15-32-28/",
+                  "/20220126-15-42-29/",
+                 ]
+    # utc local
+    base_ts_ls = {'20220118-13-43-20': [1642484600284,1642484600826],
+                  '20220126-14-52-23': [1643179942119,1643179944003],
+                  '20220126-15-02-25': [1643180543397,1643180545286],
+                  '20220126-15-12-26': [1643181144484,1643181146376],
+                  '20220126-15-22-27': [1643181745461,1643181747357],
+                  '20220126-15-32-28': [1643182346486,1643182348386],
+                  '20220126-15-42-29': [1643182947438,1643182949343]
+                  }
+    
+    for i in range(len(root_path_ls)):
+
+        root = inhouse_path + root_path_ls[i]
+        save_root = save_path + root_path_ls[i] + "/radar_front/"
+        ## local base timestamp (meta.xml)
+        base_ts = base_ts_ls[root_path_ls[i][1:-1]][1]
+        read_raw_radar(root,save_root,base_ts)
+        
+
+if __name__ == '__main__':
+    main()
