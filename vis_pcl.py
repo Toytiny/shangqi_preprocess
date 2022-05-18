@@ -47,8 +47,8 @@ def get_bbx_param(obj_info):
     obbx = o3d.geometry.OrientedBoundingBox(center.T, rot_m, extent.T)
     return obbx
 
-root_path = "../20220126-14-52-23/"
-lidar_path = "/media/toytiny/Data2/20220126-14-52-23/lidar/20220126-14-52-23_C/"
+root_path = "/mnt/12T/fangqiang/inhouse/20220126-14-52-23/"
+lidar_path = "/mnt/12T/public/inhouse/20220126-14-52-23/input/lidar/20220126-14-52-23_C/"
 
 lidar_files = sorted(glob(lidar_path + "*.pcd"))
 
@@ -56,7 +56,7 @@ gt_files = sorted(glob(root_path + "sync_gt/*.csv"))
 
 radar_files = sorted(glob(root_path + "sync_radar/*.csv"))
 
-img_path = root_path + "img_vis_video/"
+img_path = root_path + "vis_lidar"
 
 save_img = True
 if save_img:

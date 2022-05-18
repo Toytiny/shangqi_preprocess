@@ -235,7 +235,7 @@ def main():
                   '20220126-15-42-29': [1643182947438,1643182949343]
                   }
     
-    for i in range(1,len(root_path_ls)):
+    for i in range(0,len(root_path_ls)):
 
         root = inhouse_path + root_path_ls[i]
         save_root = save_path + root_path_ls[i] 

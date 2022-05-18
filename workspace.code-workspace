@@ -2,6 +2,12 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../../../mnt/12T/public/inhouse"
+		},
+		{
+			"path": "../../../mnt/12T/fangqiang"
 		}
 	],
 	"settings": {}
