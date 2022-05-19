@@ -15,18 +15,20 @@ import cv2
 from tqdm import tqdm
 from pose_extract import get_trans_from_gnssimu, get_matrix_from_ext, get_interpolate_pose
 from RAFT.core.raft import RAFT
+from RAFT.core.utils.flow_viz import flow_to_image
 import torch
 
 ROOT_PATH = "/mnt/12T/fangqiang/inhouse/"
 
 SAM_PATH = "/mnt/12T/fangqiang/scene_flow_samples/"
-IMG_PATH = "/mnt/12T/fangqiang/scene_flow_imgs/"
+SHOW_PATH = "/mnt/12T/fangqiang/scene_flow_imgs/"
 
 SIDE_RANGE = (-50, 50)
 FWD_RANGE = (0, 100)
 HEIGHT_RANGE = (-10,10) 
 RES = 0.15625
 RADAR_EXT = np.array([0.06, -0.2, 0.7,-3.5, 2, 180])
+RESIZE_SCALE = 1/2
 # utc local
 BASE_TS_LS = {'20220118-13-43-20': [1642484600284,1642484600826],
               '20220126-14-52-23': [1643179942119,1643179944003],
@@ -299,9 +301,34 @@ def route_plot(poses,seq):
     
     return drive_dis
 
+def show_optical_flow(img1, img2, opt_flow, img_path, num_pcs):
+
+    opt_flow = opt_flow.squeeze(0).permute(2,1,0).cpu().detach().numpy()
+    resize_dim = (int(img1.shape[1]),int(img1.shape[0]))
+    opt_flow = cv2.resize(opt_flow, resize_dim)
+    flow_img = flow_to_image(opt_flow)
+    vis_img = np.concatenate((img1,img2,flow_img),axis=0)
+    img_path = img_path + "/" + "opt_flow/"
+    if not os.path.exists(img_path):
+        os.makedirs(img_path)
+    path = img_path + "{}.jpg".format(num_pcs)
+    cv2.imwrite(path, vis_img)
+
+def estimate_optical_flow(img1,img2,model):
+
+    resize_dim = (int(RESIZE_SCALE*img1.shape[1]),int(RESIZE_SCALE*img1.shape[0]))
+    img1 = cv2.resize(img1,resize_dim)
+    img2 = cv2.resize(img2,resize_dim)
+    img1_torch = torch.from_numpy(img1).cuda().unsqueeze(0).transpose(1,3)
+    img2_torch = torch.from_numpy(img2).cuda().unsqueeze(0).transpose(1,3)
+    opt_flow = model(img1_torch, img2_torch, 6)
+
+    return opt_flow
+
 
 def init_raft():
 
+        model_path = "/home/fangqiang/shangqi_preprocess/models/raft-small.pth"
         parser = argparse.ArgumentParser()
         parser.add_argument('--name', default='raft', help="name your experiment")
         parser.add_argument('--stage', help="determines which dataset to use for training")
@@ -326,6 +353,7 @@ def init_raft():
         raft_args = parser.parse_args()
 
         raft = RAFT(raft_args).cuda()
+        raft.load_state_dict(torch.load(model_path), strict=False)
 
         return raft
 
@@ -333,8 +361,8 @@ def main():
     
     if not os.path.exists(SAM_PATH):
         os.makedirs(SAM_PATH)
-    if not os.path.exists(IMG_PATH):
-        os.makedirs(IMG_PATH)
+    if not os.path.exists(SHOW_PATH):
+        os.makedirs(SHOW_PATH)
         
     seqs = sorted(os.listdir(ROOT_PATH))
     splits = {'train' : seqs[1:6], 'val': [seqs[6]], 'test': [seqs[0]],}
@@ -353,9 +381,9 @@ def main():
         sam_path = SAM_PATH + "/"+ split
         if not os.path.exists(sam_path):
             os.makedirs(sam_path)
-        img_path = IMG_PATH+ "/"+ split
-        if not os.path.exists(img_path):
-            os.makedirs(img_path)
+        show_path = SHOW_PATH+ "/"+ split
+        if not os.path.exists(show_path):
+            os.makedirs(show_path)
         
         for seq in splits[split]:
             
@@ -419,23 +447,24 @@ def main():
                             tran = np.dot(np.linalg.inv(target1['pose']), target2['pose'])
                             ## obtain the scene flow labels from rigid transform and tracking object bounding boxes
                             labels, mask = get_flow_label(target1,tran,gt1,gt2,radar_to_ego,'test')
-                            mask_show(mask,target1,num_pcs,img_path)
+                            mask_show(mask,target1,num_pcs,show_path)
                             # show aligned two point clouds
-                            align_show(target1,target2,tran,num_pcs,img_path)
+                            align_show(target1,target2,tran,num_pcs,show_path)
                         else: 
                             continue
                     ## obtain groundtruth for train and val    
                     else:
                         tran = np.dot(np.linalg.inv(target1['pose']), target2['pose'])
                         labels, mask = get_flow_label(target1,tran,gt1,gt2,radar_to_ego,'train')
-                        mask_show(mask,target1,num_pcs,img_path)
-                        align_show(target1,target2,tran,num_pcs,img_path)
+                        mask_show(mask,target1,num_pcs,show_path)
+                        align_show(target1,target2,tran,num_pcs,show_path)
                         ## aggregate info from the images through optical flow
                         img1 = cv2.imread(img_path + imgs_ls[i])
                         img2 = cv2.imread(img_path + imgs_ls[i+1])
-                        img1_torch = torch.from_numpy(img1).cuda().unsqueeze(0).transpose(1,3)
-                        img2_torch = torch.from_numpy(img2).cuda().unsqueeze(0).transpose(1,3)
-                        opt_flow = raft_model(img1_torch, img2_torch, 12)
+                        opt_flow = estimate_optical_flow(img1, img2, raft_model)
+                        show_optical_flow(img1, img2, opt_flow, show_path, num_pcs)
+                        
+
                         # TODO save the flow vector and perspective projected point 
                         # for all radar points in frame one
 

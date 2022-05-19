@@ -88,7 +88,7 @@ def main():
     lidar_T = get_matrix_from_ext(lidar_ext)
     cam_T = get_matrix_from_ext(cam_ext)
 
-    for i in range(1,len(root_path_ls)):
+    for i in range(3,len(root_path_ls)):
         root_path = sync_path + root_path_ls[i]
         img_path = root_path + 'sync_img/'
         radar_path = root_path + 'sync_radar/'
