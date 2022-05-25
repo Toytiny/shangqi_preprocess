@@ -232,4 +232,3 @@ def fetch_dataloader(args, TRAIN_DS='C+T+K+S+H'):
 
     print('Training with %d image pairs' % len(train_dataset))
     return train_loader
-
