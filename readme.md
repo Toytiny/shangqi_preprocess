@@ -19,9 +19,9 @@ Put all needed data under the root path.
 
 | Sensor        | x (m) | y (m) | z (m) | yaw (°) | pitch (°) | roll (°) |
 | ------------- | ----- | ----- | ----- | ------- | --------- | -------- |
-| LiDAR         | 0     | 0     | -0.3  | -2.5    | 0         | 0        |
+| LiDAR         | -2.50     | 0     | 2.03  | 4.9    | -1.5         | 0        |
 | Radar (front) | 0.06  | -0.2  | 0.7   | -3.5    | 2         | 180      |
-| Camera        | -1.793| -0.036| 1.520 | -1.66   | -0.09     | -0.9     |
+| Camera        | -1.793| -0.036| 1.520 | -91.66   | -0.09     | -90.9     |
 
 These parameters are adjusted by us and can roughly align LiDAR, radar point cloud and GT bounding boxes.
 
