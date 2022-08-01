@@ -198,7 +198,8 @@ def sync_all_sensors(save_radar, save_gt, save_img, radar, lidar_path, pose_path
     ego_pose, pose_ts = get_interpolate_pose(pose_path,scale=10)
     pose_ts = (pose_ts-base_ts_local)/1e3
     # # get the corresponding timestamp (sync with lidar) of gt
-    gt_cor_idx, gt_cor_ts = get_cor_gt_idx(lidar_ts, gt_ts)
+    if len(gt_ts)>0:
+        gt_cor_idx, gt_cor_ts = get_cor_gt_idx(lidar_ts, gt_ts)
     # # get the corresponding timestamp (sync with lidar) of each radar sensor 
     cor_idx, cor_ts = get_cor_radar_idx(lidar_ts, radar_ts)
     # # get the corresponding timestamp (sync with lidar) of each img
@@ -208,31 +209,20 @@ def sync_all_sensors(save_radar, save_gt, save_img, radar, lidar_path, pose_path
     concat_radars(base_ts, front_files,left_files,right_files,cor_idx,cor_ts,\
          lidar_ts, ego_pose,pose_ts,sensor_T,save_radar)
     # # save sync gt to new folder, no need pose data, just to match gt and lidar
-    save_sync_gt(save_gt,gt_cor_idx,base_ts,lidar_ts,gt_files)
+    if len(gt_ts)>0:
+        save_sync_gt(save_gt,gt_cor_idx,base_ts,lidar_ts,gt_files)
     save_sync_img(save_img,img_cor_idx,base_ts,lidar_ts,img_files)
     
 
 def main():
     
-    inhouse_path = "/mnt/12T/public/inhouse/"
+    inhouse_path = "/mnt/12T/fangqiang/"
     save_path = "/mnt/12T/fangqiang/inhouse/"
 
-    root_path_ls = ["/20220118-13-43-20/",
-                  "/20220126-14-52-23/",
-                  "/20220126-15-02-25/",
-                  "/20220126-15-12-26/",
-                  "/20220126-15-22-27/",
-                  "/20220126-15-32-28/",
-                  "/20220126-15-42-29/",
+    root_path_ls = ["/20220222-10-32-36-part/"
                  ]
     # utc local
-    base_ts_ls = {'20220118-13-43-20': [1642484600284,1642484600826],
-                  '20220126-14-52-23': [1643179942119,1643179944003],
-                  '20220126-15-02-25': [1643180543397,1643180545286],
-                  '20220126-15-12-26': [1643181144484,1643181146376],
-                  '20220126-15-22-27': [1643181745461,1643181747357],
-                  '20220126-15-32-28': [1643182346486,1643182348386],
-                  '20220126-15-42-29': [1643182947438,1643182949343]
+    base_ts_ls = {'20220222-10-32-36-part': [1645497156380,1645497156628]
                   }
     
     for i in range(0,len(root_path_ls)):
