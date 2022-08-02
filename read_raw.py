@@ -262,10 +262,10 @@ def main():
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    root_path_ls = ["/20220222-10-32-36-part/"
+    root_path_ls = ["/20220222-10-32-36/"
                  ]
     # utc local
-    base_ts_ls = {'20220222-10-32-36-part': [1645497156380,1645497156628]
+    base_ts_ls = {'20220222-10-32-36': [1645497156380,1645497156628]
                   }
     
     for i in range(len(root_path_ls)):
@@ -273,7 +273,7 @@ def main():
         root = inhouse_path + root_path_ls[i]
         save_root = save_path + root_path_ls[i] + "/radar_front/"
         ## local base timestamp (meta.xml)
-        base_ts = base_ts_ls[root_path_ls[i][1:-1]][1]
+        base_ts = base_ts_ls[root_path_ls[i][1:-1]][1] #[1]
         read_raw_radar(root,save_root,base_ts)
         
 

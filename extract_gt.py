@@ -67,16 +67,10 @@ def extract_gt_box(root_path,save_path):
 
 def main():    
     
-    inhouse_path = "/mnt/12T/public/inhouse/"
+    inhouse_path = "/mnt/12T/fangqiang/"
     save_path = "/mnt/12T/fangqiang/inhouse/"
 
-    root_path = ["/20220118-13-43-20/",
-                  "/20220126-14-52-23/",
-                  "/20220126-15-02-25/",
-                  "/20220126-15-12-26/",
-                  "/20220126-15-22-27/",
-                  "/20220126-15-32-28/",
-                  "/20220126-15-42-29/",
+    root_path = ["/20220222-10-32-36/"
                  ]
 
     for i in range(len(root_path)):

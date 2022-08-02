@@ -219,10 +219,10 @@ def main():
     inhouse_path = "/mnt/12T/fangqiang/"
     save_path = "/mnt/12T/fangqiang/inhouse/"
 
-    root_path_ls = ["/20220222-10-32-36-part/"
+    root_path_ls = ["/20220222-10-32-36/"
                  ]
     # utc local
-    base_ts_ls = {'20220222-10-32-36-part': [1645497156380,1645497156628]
+    base_ts_ls = {'20220222-10-32-36': [1645497156380,1645497156628]
                   }
     
     for i in range(0,len(root_path_ls)):
