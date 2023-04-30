@@ -137,7 +137,7 @@ if save_img:
 lidar_tr = get_matrix_from_ext(lidar_ext)
 radar_tr = get_matrix_from_ext(radar_ext)
 
-for idx in range(0, len(lidar_files)):
+for idx in range(0, len(lidar_files)):#len(lidar_files)):
     lidar_pcd = o3d.io.read_point_cloud(lidar_files[idx])
     lidar_pcd = o3d.geometry.PointCloud.uniform_down_sample(lidar_pcd, 10)
     radar_pcd = csv2geometry(radar_files[idx])
@@ -151,7 +151,7 @@ for idx in range(0, len(lidar_files)):
     indices = filt_points_in_range(radar_pc[:,0],radar_pc[:,1],radar_pc[:,2])
     radar_pc = radar_pc[indices]
 
-    gt_data = np.loadtxt(gt_files[idx])
+    gt_data = np.loadtxt(gt_files[idx+1])
     box_list = []
     for obj_info in gt_data:
          obj_bbx = get_bbx_param(obj_info, lidar_tr)

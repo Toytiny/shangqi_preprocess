@@ -13,4 +13,4 @@ if len(image_files) > frame:
 print("-----Start making clip------")
 clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps=fps)
 print("-----Save video clip------")
-clip.write_videofile('/mnt/12T/fangqiang/inhouse/20220222-10-32-36/vis_pcs.mp4')
+clip.write_videofile('/mnt/12T/fangqiang/inhouse/20220222-10-32-36/vis_pcs_bbx.mp4')
